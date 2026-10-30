@@ -1,16 +1,19 @@
 import dash
-from dash import html, dcc
+from dash import dcc, html
 
 dash.register_page(__name__, path="/")
 
-layout2 = html.Div([
-    html.H1("My Internship Portfolio"),
-    html.P("Welcome to my scientific results portfolio.")
-], style={'padding': '20px'})
+layout2 = html.Div(
+    [
+        html.H1("My Internship Portfolio"),
+        html.P("Welcome to my scientific results portfolio."),
+    ],
+    style={"padding": "20px"},
+)
 
-textlayout = html.Div([
-
-    dcc.Markdown("""
+textlayout = html.Div(
+    [
+        dcc.Markdown("""
 #### About this portfolio
 
 This web portal presents the work carried out during my internship and provides an interactive overview of the main methods, analyses, and results obtained throughout the project.
@@ -38,11 +41,10 @@ Thomas Bourgeron, **PhD**
 Xavier Mousset, **PhD**  
 Matthieu Matsima
 """)
+    ],
+    style={"padding": "20px"},
+)
 
-], style={'padding': '20px'})
 
+layout = html.Div([layout2, textlayout])
 
-layout = html.Div([
-    layout2,
-    textlayout
-])
