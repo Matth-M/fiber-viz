@@ -14,13 +14,17 @@ logger = logging.getLogger(__file__)
 
 dash.register_page(__name__, path="/basic_signals")
 
-root_experiment_folder = Path(__file__).parent.parent.joinpath("autres_manip")
+ROOT_EXPERIMENT_FOLDER_DEFAULT = Path(__file__).parent.parent.joinpath("autres_manip")
 
 
 layout = html.Div(
     [
         html.Div(
             [
+                dcc.Input(
+                    id="root_folder",
+                    value=str(ROOT_EXPERIMENT_FOLDER_DEFAULT.absolute()),
+                ),
                 dcc.Dropdown(
                     id="mouse_folders",
                     placeholder="Select a mouse folder",
@@ -43,17 +47,28 @@ layout = html.Div(
 )
 
 
-@callback(Output("mouse_folders", "options"))
-def experiment_folders():
+@callback(
+    Output("mouse_folders", "options"),
+    Input("root_folder", "value"),
+)
+def experiment_folders(root_folder):
+    root_folder = Path(root_folder)
     # Return all mouse folders in root folder
-    return [child.name for child in root_experiment_folder.iterdir() if child.is_dir()]
+    return [
+        {"label": child.name, "value": str(child.absolute())}
+        for child in root_folder.iterdir()
+        if child.is_dir()
+    ]
 
 
-@callback(Output("experiment_file", "options"), Input("mouse_folders", "value"))
+@callback(
+    Output("experiment_file", "options"),
+    Input("mouse_folders", "value"),
+)
 def experiment_file(folder_selection):
     if folder_selection is None:
         return []
-    mouse_folder = root_experiment_folder.joinpath(folder_selection)
+    mouse_folder = Path(folder_selection)
     files = [
         {
             "label": file.parent.parent.name,
