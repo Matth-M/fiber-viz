@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 from pathlib import Path
 
@@ -9,9 +10,11 @@ from dash import Dash, Input, Output, callback, dcc, html, page_container
 from plotly import graph_objects as go
 from scipy.ndimage import gaussian_filter1d
 
+logger = logging.getLogger(__file__)
+
 dash.register_page(__name__, path="/basic_signals")
 
-# ----------files
+root_experiment_folder = Path(__file__).parent.parent.joinpath("autres_manip")
 
 
 layout = html.Div(
@@ -19,16 +22,13 @@ layout = html.Div(
         html.Div(
             [
                 dcc.Dropdown(
-                    [
-                        "Souris 83 (HT)",
-                        "Souris 86 (HT)",
-                        "Souris 87 (WT)",
-                        "Souris 88 (WT)",
-                    ],
+                    id="mouse_folders",
                     placeholder="Select a mouse folder",
-                    id="dropdown_folders",
                 ),
-                dcc.Dropdown(placeholder="select a mouse file", id="dropdown_files"),
+                dcc.Dropdown(
+                    id="experiment_file",
+                    placeholder="select a mouse file",
+                ),
             ],
             style={"color": "black"},
         ),
@@ -43,50 +43,43 @@ layout = html.Div(
 )
 
 
-@callback(Output("dropdown_files", "options"), Input("dropdown_folders", "value"))
-def correct_files(folder_selection):
+@callback(Output("mouse_folders", "options"))
+def experiment_folders():
+    # Return all mouse folders in root folder
+    return [child.name for child in root_experiment_folder.iterdir() if child.is_dir()]
+
+
+@callback(Output("experiment_file", "options"), Input("mouse_folders", "value"))
+def experiment_file(folder_selection):
     if folder_selection is None:
         return []
-    if folder_selection == "Souris 83 (HT)":
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\portfolio\autres_manip\Manip_souris83"
-        )
-        files = list(folder.glob(r"**\Fluorescence.csv"))
-        return [
-            {"label": str(file).split("\\")[-3], "value": str(file)} for file in files
+    mouse_folder = root_experiment_folder.joinpath(folder_selection)
+    files = [
+        {
+            "label": file.parent.parent.name,
+            "value": str(file.absolute()),
+        }
+        for file in mouse_folder.glob(r"**\Fluorescence.csv")
+    ]
+    if len(files) == 0:
+        files = [
+            {
+                "label": f"{file.name}",
+                "value": f"{str(file.absolute())}",
+            }
+            for file in mouse_folder.glob(r"**.csv")
         ]
-    if folder_selection == "Souris 86 (HT)":
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\portfolio\autres_manip\Manip_souris86"
-        )
-        files = list(folder.glob(r"**\Fluorescence.csv"))
-        return [
-            {"label": str(file).split("\\")[-3], "value": str(file)} for file in files
-        ]
-    if folder_selection == "Souris 87 (WT)":
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\portfolio\autres_manip\Manip_souris87"
-        )
-        files = list(folder.glob("**.csv"))
-        return [
-            {"label": str(file).split("\\")[-1], "value": str(file)} for file in files
-        ]
-    if folder_selection == "Souris 88 (WT)":
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\portfolio\autres_manip\Manip_souris88"
-        )
-        files = list(folder.glob(r"**\Fluorescence.csv"))
-        return [
-            {"label": str(file).split("\\")[-2], "value": str(file)} for file in files
-        ]
+
+    return files
 
 
 @callback(
     Output("signal_graph", "figure"),
-    Input("dropdown_files", "value"),
-    # Input('signal_checklist', "value")
+    Input("experiment_file", "value"),
 )
 def display_graph_from_csv(csv):
+    logger.debug(f"csv path: {csv}")
+
     if csv is None:
         return go.Figure()
 
@@ -103,6 +96,7 @@ def display_graph_from_csv(csv):
 
     fig = go.Figure()
 
+    # TODO:
     # if checklist_option == []:
     #     return fig
     # if 'CH1-410' in checklist_option:
@@ -126,12 +120,3 @@ def display_graph_from_csv(csv):
         title="Fluorescent signals", xaxis_title="time (ms)", yaxis_title="percentage"
     )
     return fig
-
-
-# @callback(
-#     Output("signal_graph", 'figure'),
-
-
-# def updategraph(checklist_option):
-
-#     if checklist_option== 'CH1-410':
