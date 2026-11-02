@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 from pathlib import Path
 
@@ -9,23 +10,37 @@ from dash import Dash, Input, Output, callback, dcc, html, page_container
 from plotly import graph_objects as go
 from scipy.ndimage import gaussian_filter1d
 
+from src.utils import DATA_ROOT
+
+boxplots_root_folder = DATA_ROOT.joinpath("boxplots_regression")
+
 dash.register_page(__name__, path="/boxplots")
+
+logger = logging.getLogger(__name__)
 
 layout = html.Div(
     [
         html.Div(
             [
-                dcc.Dropdown(
-                    ["005-008", "008-012", "012-25sec"],
-                    placeholder="Select events",
-                    id="dropdown_events",
+                dcc.Input(
+                    id="root_folder",
+                    value=str(boxplots_root_folder),
                 ),
                 dcc.Dropdown(
-                    ["1", "2", "3", "4", "5", "6"],
-                    placeholder="select a phase",
-                    id="dropdown_phases",
-                    style={"backgroundColor": "transparent"},
+                    id="file_selection",
+                    placeholder="Select file",
                 ),
+                # dcc.Dropdown(
+                #     ["005-008", "008-012", "012-25sec"],
+                #     placeholder="Select events",
+                #     id="dropdown_events",
+                # ),
+                # dcc.Dropdown(
+                #     ["1", "2", "3", "4", "5", "6"],
+                #     placeholder="select a phase",
+                #     id="dropdown_phases",
+                #     style={"backgroundColor": "transparent"},
+                # ),
             ],
             style={"backgroundColor": "transparent"},
         ),
@@ -61,21 +76,33 @@ layout = html.Div(
 
 
 @callback(
-    Output("boxplot_graph", "srcDoc"),
-    Input("dropdown_phases", "value"),
-    Input("dropdown_events", "value"),
+    Output("file_selection", "options"),
+    Input("root_folder", "value"),
 )
-def update_boxplot(phase, event):
-    folder = Path(
-        r"C:\Users\cboulest\Desktop\claire\Claire\portfolio\boxplots_regression"
-    )
-    if event is None or phase is None:
-        return ""
-    event = event.replace("-", "_")
-    file = folder / f"events_{event}_phase{phase}.html"
-    if event == "012-25sec":
-        file = folder / f"events_after_012_phase{phase}.html"
+def graph_file(root_folder):
+    if root_folder is None:
+        return []
+    root = Path(root_folder)
+    if not root.exists():
+        logger.debug(f"{root} not found")
+        return []
 
+    return [
+        {"label": child.name, "value": child.absolute().__str__()}
+        for child in root.iterdir()
+    ]
+
+
+@callback(
+    Output("boxplot_graph", "srcDoc"),
+    Input("file_selection", "value"),
+)
+def update_boxplot(file_selection):
+    if file_selection is None:
+        return ""
+
+    file = Path(file_selection)
     if not file.exists():
-        return "<p>No boxplot available.</p>"
+        return ""
+
     return file.read_text(encoding="utf-8")

@@ -10,7 +10,9 @@ from scipy.ndimage import gaussian_filter1d
 
 dash.register_page(__name__, path="/peaks")
 
-from src.utils import ROOT_EXPERIMENT_FOLDER_DEFAULT
+from src.utils import DATA_ROOT
+
+experiments_root_folder = DATA_ROOT.joinpath("autres_manip")
 
 layout = html.Div(
     [
@@ -22,7 +24,7 @@ layout = html.Div(
                         html.P("Experiment root folder:"),
                         dcc.Input(
                             id="root_folder",
-                            value=str(ROOT_EXPERIMENT_FOLDER_DEFAULT.absolute()),
+                            value=str(experiments_root_folder.absolute()),
                         ),
                         dcc.Dropdown(
                             id="dropdown_folders",
@@ -167,6 +169,7 @@ def experiment_files(folder_selection):
         ]
 
     return files
+
 
 def make_smoothing_graph(
     X,

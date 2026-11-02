@@ -10,7 +10,10 @@ from dash import Dash, Input, Output, callback, dcc, html, page_container
 from plotly import graph_objects as go
 from scipy.ndimage import gaussian_filter1d
 
-from src.utils import ROOT_EXPERIMENT_FOLDER_DEFAULT
+from src.utils import DATA_ROOT
+
+experiments_root_folder = DATA_ROOT.joinpath("autres_manip")
+
 
 logger = logging.getLogger(__file__)
 
@@ -24,7 +27,7 @@ layout = html.Div(
                 html.P("Experiment root folder:"),
                 dcc.Input(
                     id="root_folder",
-                    value=str(ROOT_EXPERIMENT_FOLDER_DEFAULT.absolute()),
+                    value=str(experiments_root_folder.absolute()),
                 ),
                 dcc.Dropdown(
                     id="mouse_folders",
