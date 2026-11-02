@@ -10,13 +10,13 @@ from scipy.ndimage import gaussian_filter1d
 
 dash.register_page(__name__, path="/peaks")
 
+from src.utils import ROOT_EXPERIMENT_FOLDER_DEFAULT
 
 layout = html.Div(
     [
         html.Div(
             [
                 html.H3("Effects of smoothing on peak detection"),
-                dcc.Markdown("""Folder and file selection"""),
                 html.Div(
                     [
                         html.P("Experiment root folder:"),
@@ -25,17 +25,12 @@ layout = html.Div(
                             value=str(ROOT_EXPERIMENT_FOLDER_DEFAULT.absolute()),
                         ),
                         dcc.Dropdown(
-                            [
-                                "Souris 83 (HT)",
-                                "Souris 86 (HT)",
-                                "Souris 87 (WT)",
-                                "Souris 88 (WT)",
-                            ],
+                            id="dropdown_folders",
                             placeholder="Select a mouse folder",
-                            id="dropdown_folders2",
                         ),
                         dcc.Dropdown(
-                            placeholder="select a mouse file", id="dropdown_files2"
+                            id="dropdown_files",
+                            placeholder="select a mouse file",
                         ),
                     ],
                     style={"color": "black"},
@@ -132,45 +127,46 @@ layout = html.Div(
 
 
 @callback(
-    Output("dropdown_files2", "options"),
-    Input("dropdown_folders2", "value"),
+    Output("dropdown_folders", "options"),
+    Input("root_folder", "value"),
 )
-def correct_files(folder_selection):
+def experiment_folders(folder_selection):
+    root_folder = Path(folder_selection)
+    if not root_folder.exists():
+        return []
+    # Return all mouse folders in root folder
+    return [
+        {"label": child.name, "value": str(child.absolute())}
+        for child in root_folder.iterdir()
+        if child.is_dir()
+    ]
+
+
+@callback(
+    Output("dropdown_files", "options"),
+    Input("dropdown_folders", "value"),
+)
+def experiment_files(folder_selection):
     if folder_selection is None:
         return []
-    if folder_selection == "Souris 83 (HT)":
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\detection_transient\autres_manip\Manip_souris83"
-        )
-        files = list(folder.glob(r"**\Fluorescence.csv"))
-        return [
-            {"label": str(file).split("\\")[-3], "value": str(file)} for file in files
-        ]
-    if folder_selection == "Souris 86 (HT)":
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\detection_transient\autres_manip\Manip_souris86"
-        )
-        files = list(folder.glob(r"**\Fluorescence.csv"))
-        return [
-            {"label": str(file).split("\\")[-3], "value": str(file)} for file in files
-        ]
-    if folder_selection == "Souris 87 (WT)":
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\detection_transient\autres_manip\Manip_souris87"
-        )
-        files = list(folder.glob("**.csv"))
-        return [
-            {"label": str(file).split("\\")[-1], "value": str(file)} for file in files
-        ]
-    if folder_selection == "Souris 88 (WT)":
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\detection_transient\autres_manip\Manip_souris88"
-        )
-        files = list(folder.glob(r"**\Fluorescence.csv"))
-        return [
-            {"label": str(file).split("\\")[-3], "value": str(file)} for file in files
+    mouse_folder = Path(folder_selection)
+    files = [
+        {
+            "label": file.parent.parent.name,
+            "value": str(file.absolute()),
+        }
+        for file in mouse_folder.glob(r"**\Fluorescence.csv")
+    ]
+    if len(files) == 0:  # no Fluorescence found
+        files = [
+            {
+                "label": f"{file.name}",
+                "value": f"{str(file.absolute())}",
+            }
+            for file in mouse_folder.glob(r"**\*.csv")
         ]
 
+    return files
 
 def make_smoothing_graph(
     X,
@@ -253,7 +249,7 @@ def make_smoothing_graph(
     Output("smoothing_graph", "figure"),
     Output("smoothing_graph2", "figure"),
     Output("smoothing_graph3", "figure"),
-    Input("dropdown_files2", "value"),
+    Input("dropdown_files", "value"),
     Input("smoothing_slider", "value"),  # value1
     Input("smoothing_slider2", "value"),  # value2
     Input("smoothing_slider3", "value"),  # value3
