@@ -19,6 +19,11 @@ layout = html.Div(
                 dcc.Markdown("""Folder and file selection"""),
                 html.Div(
                     [
+                        html.P("Experiment root folder:"),
+                        dcc.Input(
+                            id="root_folder",
+                            value=str(ROOT_EXPERIMENT_FOLDER_DEFAULT.absolute()),
+                        ),
                         dcc.Dropdown(
                             [
                                 "Souris 83 (HT)",

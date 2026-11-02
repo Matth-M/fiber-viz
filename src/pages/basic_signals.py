@@ -10,17 +10,18 @@ from dash import Dash, Input, Output, callback, dcc, html, page_container
 from plotly import graph_objects as go
 from scipy.ndimage import gaussian_filter1d
 
+from src.utils import ROOT_EXPERIMENT_FOLDER_DEFAULT
+
 logger = logging.getLogger(__file__)
 
 dash.register_page(__name__, path="/basic_signals")
-
-ROOT_EXPERIMENT_FOLDER_DEFAULT = Path(__file__).parent.parent.joinpath("autres_manip")
 
 
 layout = html.Div(
     [
         html.Div(
             [
+                html.P("Experiment root folder:"),
                 dcc.Input(
                     id="root_folder",
                     value=str(ROOT_EXPERIMENT_FOLDER_DEFAULT.absolute()),
@@ -76,13 +77,13 @@ def experiment_file(folder_selection):
         }
         for file in mouse_folder.glob(r"**\Fluorescence.csv")
     ]
-    if len(files) == 0:
+    if len(files) == 0:  # no Fluorescence found
         files = [
             {
                 "label": f"{file.name}",
                 "value": f"{str(file.absolute())}",
             }
-            for file in mouse_folder.glob(r"**.csv")
+            for file in mouse_folder.glob(r"**\*.csv")
         ]
 
     return files
