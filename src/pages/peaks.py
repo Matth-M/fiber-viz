@@ -8,9 +8,10 @@ import scipy.signal as s
 from dash import Input, Output, callback, dcc, html
 from scipy.ndimage import gaussian_filter1d
 
+from src.utils import DATA_ROOT
+
 dash.register_page(__name__, path="/peaks")
 
-from src.utils import DATA_ROOT
 
 experiments_root_folder = DATA_ROOT.joinpath("autres_manip")
 

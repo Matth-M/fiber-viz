@@ -10,8 +10,11 @@ import scipy.signal as s
 from dash import Input, Output, callback, dcc, html
 from scipy.ndimage import gaussian_filter1d
 
+from src.utils import DATA_ROOT
+
 dash.register_page(__name__, path="/photobleaching")
 
+graphs_root_folder = DATA_ROOT.joinpath("linear_regressions_graphs")
 
 layout = html.Div(
     [
@@ -27,15 +30,13 @@ layout = html.Div(
         dcc.Markdown("Vizualize it below!"),
         html.Div(
             [
+                dcc.Input(
+                    id="root_folder",
+                    value=str(graphs_root_folder),
+                ),
                 dcc.Dropdown(
-                    options=[
-                        {"label": "Souris 83 (HT)", "value": 83},
-                        {"label": "Souris 86 (HT)", "value": 86},
-                        {"label": "Souris 87 (WT)", "value": 87},
-                        {"label": "Souris 88 (WT)", "value": 88},
-                    ],
-                    placeholder="Select a mouse folder",
-                    id="dropdown_files3",
+                    id="graph_file",
+                    placeholder="Select a graph",
                 ),
             ],
             style={"color": "black"},
@@ -65,17 +66,33 @@ layout = html.Div(
     style={"padding": "20px"},
 )
 
-
-@callback(Output("photobleaching_graph", "srcDoc"), Input("dropdown_files3", "value"))
-def correct_files(option_selection):
-    if option_selection is None:
+@callback(
+    Output("photobleaching_graph", "srcDoc"),
+    Input("graph_file", "value"),
+)
+def update_boxplot(file_selection):
+    if file_selection is None:
         return ""
-    if option_selection:
-        folder = Path(
-            r"C:\Users\cboulest\Desktop\claire\Claire\portfolio\linear_regressions_graphs"
-        )
-        files = list(folder.glob(rf"mouse{option_selection}*.html"))
-        if files == []:
-            return "<p>No graph available.</p>"
-        return files[0].read_text(encoding="utf-8")
 
+    file = Path(file_selection)
+    if not file.exists():
+        return ""
+
+    return file.read_text(encoding="utf-8")
+
+@callback(
+    Output("graph_file", "options"),
+    Input("root_folder", "value"),
+)
+def graph_file(root_folder):
+    if root_folder is None:
+        return []
+    root = Path(root_folder)
+    if not root.exists():
+        logger.debug(f"{root} not found")
+        return []
+
+    return [
+        {"label": child.name, "value": child.absolute().__str__()}
+        for child in root.iterdir()
+    ]
