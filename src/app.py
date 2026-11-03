@@ -78,27 +78,11 @@ def change_theme(value):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    app.run(debug=True)
+    import argparse
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true")
 
-# ├── app.py
-# │
-# └── pages/
-#     ├── home.py
-#     ├── growth.py
-#     └── microscopy.py
-
-
-#              app.py
-#                │
-#       "Which page should I show?"
-#                │
-#     ┌──────────┼───────────┐
-#     ↓          ↓           ↓
-#  home.py    growth.py   microscopy.py
-#     ↑          ↑           ↑
-#     └──────────┴───────────┘
-#                │
-#         pages/ folder
-
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
+    app.run(debug=args.debug)
