@@ -48,12 +48,7 @@ layout = html.Div(
             [
                 html.Iframe(
                     id="boxplot_graph",
-                    style={
-                        "width": "115%",
-                        "height": "468px",
-                        "border": "none",
-                        "backgroundColor": "transparent",
-                    },
+                    style={"width": "100%", "height": "800px", "border": "none"},
                 ),
                 html.Div(
                     [

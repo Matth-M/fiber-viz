@@ -55,7 +55,7 @@ sidebar = html.Div(
     ],
     # className="bg-primary",
     style={
-        "width": "120px",
+        "width": "15em",
         "padding": "20px",
         "backgroundColor": "#4C8BCA",  # "#3F9FD4",
         "minHeight": "100vh",
