@@ -1,14 +1,11 @@
-import glob
 import logging
-import os
 from pathlib import Path
 
 import dash
 import numpy as np
 import pandas as pd
-from dash import Dash, Input, Output, callback, dcc, html, page_container
+from dash import Input, Output, callback, dcc, html
 from plotly import graph_objects as go
-from scipy.ndimage import gaussian_filter1d
 
 from src.utils import DATA_ROOT
 

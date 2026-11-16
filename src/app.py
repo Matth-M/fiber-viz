@@ -1,8 +1,6 @@
 import logging
 
 import dash_bootstrap_components as dbc
-import pandas as pd
-import plotly.express as px
 from dash import Dash, Input, Output, callback, dcc, html, page_container
 
 logger = logging.getLogger(__file__)
