@@ -82,7 +82,9 @@ def parse_pyphotometry_csv(
         event_idx = round(delta_us * sample_rate_us)
         event_column[event_idx] = text
 
-    df["event"] = event_column
+    # RWD columns:
+    # TimeStamp, Events, CH1-410, CH1-470
+    df["Events"] = event_column
     for col in df.columns:
         if re.search("Analog", col):
             df[col] *= scale
