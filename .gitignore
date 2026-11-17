@@ -9,11 +9,5 @@ wheels/
 # Virtual environments
 .venv
 
-
-autres_manip/
-boxplots/
-boxplots_regression/
-boxplots_regression_ratio/
-graphs/
-linear_regressions_graphs/
-vertical_events/
+data/
+.logs/
