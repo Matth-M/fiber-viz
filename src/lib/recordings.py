@@ -52,13 +52,18 @@ def get_recordings_mouse_folder(
 
 
 def parse_samples_from_recordings(
-    recordings: list[tuple[RecordingNumber, Path]],
+    recordings: list[tuple[RecordingNumber, str, Path]],
     log_reader: FiberLogReader,
 ) -> pd.DataFrame:
+    """
+    Aggregate all samples froma all recordings into a single DataFrame. Use the
+    log file to get the area
+
+    """
 
     dfs = []
     latest_timestamp = 0
-    for record_number, record_path in recordings:
+    for record_number, _, record_path in recordings:
         record_df = pd.read_csv(record_path, skiprows=1)
         record_df = record_df.loc[:, ~record_df.columns.str.contains("^Unnamed")]
         if "Events" in record_df.columns:
@@ -66,6 +71,9 @@ def parse_samples_from_recordings(
 
         record_df["TimeStamp"] += latest_timestamp
         record_df["record_number"] = record_number
+        # Each recording start their timestamp at 0, offset each recording
+        # TODO: recording are not consecutive, should use the log to know the actual recording
+        # start instead
         latest_timestamp = max(record_df["TimeStamp"])
         dfs.append(record_df)
 
@@ -73,7 +81,7 @@ def parse_samples_from_recordings(
     ch410 = df.iloc[:, 1]
     ch470 = df.iloc[:, 2]
     df["delta_f"] = delta_f(ch410, ch470)
-    start = log_reader.recording_start()
+    start = log_reader.recordings_start()  # Timestamp of the start of the 1st recording
     actual_timestamps = start + pd.to_timedelta(df["TimeStamp"], unit="ms")
     df["area"] = log_reader.areas_from_timestamps(actual_timestamps)
     return df
