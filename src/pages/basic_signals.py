@@ -7,6 +7,7 @@ import pandas as pd
 from dash import Input, Output, callback, dcc, html
 from plotly import graph_objects as go
 
+from src.lib.recordings import FiberAcquisitionMode, get_recordings_mouse_folder
 from src.utils import DATA_ROOT
 
 experiments_root_folder = DATA_ROOT.joinpath("autres_manip")
@@ -65,27 +66,23 @@ def experiment_folders(root_folder):
 @callback(
     Output("experiment_file", "options"),
     Input("mouse_folders", "value"),
+    Input("mode_selection", "value"),
 )
-def experiment_file(folder_selection):
-    if folder_selection is None:
+def experiment_file(folder, mode):
+    if folder is None:
         return []
-    mouse_folder = Path(folder_selection)
+
+    mouse_folder = Path(folder)
+
     files = [
         {
-            "label": file.parent.parent.name,
-            "value": str(file.absolute()),
+            "label": f"{mouse_name}_{recording_number}",
+            "value": str(recording_path.absolute()),
         }
-        for file in mouse_folder.glob(r"**\Fluorescence.csv")
+        for recording_number, mouse_name, recording_path in get_recordings_mouse_folder(
+            mouse_folder, FiberAcquisitionMode(mode)
+        )
     ]
-    if len(files) == 0:  # no Fluorescence found
-        files = [
-            {
-                "label": f"{file.name}",
-                "value": f"{str(file.absolute())}",
-            }
-            for file in mouse_folder.glob(r"**\*.csv")
-        ]
-
     return files
 
 

@@ -19,7 +19,7 @@ def parse_mouse_recording_name(filename: str) -> tuple[int, str]:
 
 def get_recordings_mouse_folder(
     mouse_folder: Path, mode: FiberAcquisitionMode
-) -> list[tuple[RecordingNumber, Path]]:
+) -> list[tuple[RecordingNumber, str, Path]]:
     recordings = []
     match mode:
         case FiberAcquisitionMode.PYPHOTOMETRY:
@@ -28,8 +28,10 @@ def get_recordings_mouse_folder(
             for f in mouse_folder.glob("*.csv"):
                 filename = f.stem
                 try:
-                    recording_number, _ = parse_mouse_recording_name(filename)
-                    recordings.append((recording_number, f))
+                    recording_number, recording_name = parse_mouse_recording_name(
+                        filename
+                    )
+                    recordings.append((recording_number, recording_name, f))
                 except ValueError:
                     # Malformed filename with recording_number == '10kk'
                     # is it 10, 100, 1000 ? Skip it
@@ -40,9 +42,13 @@ def get_recordings_mouse_folder(
             # then all the csv. The fiber samples are in Fluorescence.csv
             for f in mouse_folder.glob("**/Fluorescence.csv"):
                 recording_folder_name = f.parent.parent.name
-                recording_number, _ = parse_mouse_recording_name(recording_folder_name)
-                recordings.append((recording_number, f))
-    return recordings
+                (
+                    recording_number,
+                    recording_name,
+                ) = parse_mouse_recording_name(recording_folder_name)
+                recordings.append((recording_number, recording_name, f))
+    # Sort by recording number
+    return sorted(recordings, key=lambda x: x[0])
 
 
 def parse_samples_from_recordings(

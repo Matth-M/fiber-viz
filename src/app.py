@@ -3,6 +3,9 @@ import logging
 import dash_bootstrap_components as dbc
 from dash import Dash, Input, Output, callback, dcc, html, page_container
 
+from src.lib.fiber_data_format import FiberAcquisitionMode
+from src.utils import setup_logging
+
 logger = logging.getLogger(__file__)
 
 app = Dash(
@@ -12,9 +15,21 @@ app = Dash(
     assets_ignore=r"quartz\.css",
 )
 
+DEFAULT_MODE = FiberAcquisitionMode.PYPHOTOMETRY.value
+DEFAULT_MODE = FiberAcquisitionMode.RWD.value
+
 sidebar = html.Div(
     [
         dbc.Switch(id="Manon theme", label="Manon theme", value=False),
+        dcc.Dropdown(
+            [
+                FiberAcquisitionMode.RWD.value,
+                FiberAcquisitionMode.PYPHOTOMETRY.value,
+            ],
+            id="mode_selection",
+            placeholder="Select data format",
+            value=DEFAULT_MODE,
+        ),
         html.Link(id="theme-link", rel="stylesheet", href=""),
         dcc.Link("home page", href="/", className="text-white text-decoration-none"),
         html.Br(),

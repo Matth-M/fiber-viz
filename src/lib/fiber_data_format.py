@@ -17,8 +17,8 @@ SCALE_ANALOG_VALUE = 1 / 100
 
 
 class FiberAcquisitionMode(Enum):
-    PYPHOTOMETRY = auto()
-    RWD = auto()
+    PYPHOTOMETRY = "PYPHOTOMETRY"
+    RWD = "RWD"
 
 
 def parse_pyphotometry_csv(
