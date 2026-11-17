@@ -82,5 +82,6 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true")
 
     args = parser.parse_args()
-    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
+
+    setup_logging(args.debug)
     app.run(debug=args.debug)
