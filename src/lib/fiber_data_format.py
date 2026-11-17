@@ -21,6 +21,16 @@ class FiberAcquisitionMode(Enum):
     RWD = "RWD"
 
 
+def parse_rwd_csv(filepath: Path) -> pd.DataFrame:
+    df = pd.read_csv(
+        filepath,
+        skiprows=1,
+        index_col=False,
+    )
+    df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+    return df
+
+
 def parse_pyphotometry_csv(
     filepath: Path,
     sample_rate=SAMPLE_RATE,
