@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 
 Area = str
 
+DOOR_OPEN_CODE = "[008]"
+ANIMAL_OUT_CODE = "[012]"
+
 
 class FiberLogReader(object):
     def __init__(self, log: Path):
@@ -18,6 +21,11 @@ class FiberLogReader(object):
 
         areas = {"timestamp": [], "area": []}
         recordings = {"timestamp": [], "record_number": []}
+        events = {
+            "door_open": {},
+            "animal_out": {},
+        }
+        record_number = None
         for line in loglines:
             area_parse = parse_area_from_logline(line)
             if area_parse:
@@ -32,14 +40,29 @@ class FiberLogReader(object):
                 recordings["record_number"].append(record_number)
                 recordings["timestamp"].append(timestamp)
                 continue
+
+            if DOOR_OPEN_CODE in line and record_number:
+                timestamp = parse_timestamp_from_logline(line)
+                if timestamp and record_number not in events["door_open"]:
+                    events["door_open"][record_number] = timestamp
+                continue
+
+            if ANIMAL_OUT_CODE in line and record_number:
+                timestamp = parse_timestamp_from_logline(line)
+                if timestamp and record_number not in events["animal_out"]:
+                    events["animal_out"][record_number] = timestamp
+                continue
+
         self.areas = {
             "timestamp": np.array(areas["timestamp"], dtype="datetime64[us]"),
             "area": np.array(areas["area"]),
         }
         self.recordings = {
             "timestamp": np.array(recordings["timestamp"], dtype="datetime64[us]"),
-            "recordings": np.array(recordings["record_number"]),
+            "record_number": np.array(recordings["record_number"]),
         }
+
+        self.events = events
 
     def areas_from_timestamps(self, timestamps: pd.Series):
         query = timestamps.astype("datetime64[us]").to_numpy()
@@ -108,7 +131,12 @@ if __name__ == "__main__":
     t = datetime.fromisoformat("2026-01-23 15:25:48.812")
     log_reader = FiberLogReader(log87)
     area = log_reader.areas_from_timestamps(pd.Series([t]))
+
     logger.debug(area)
+    logger.debug(log_reader.events["door_open"].__len__())
+    logger.debug(log_reader.events["door_open"].__len__())
+    logger.debug(log_reader.events["door_open"].keys())
+    logger.debug(log_reader.events["door_open"][6])
 
     if False:  # log parsing
         log87 = Path.cwd().joinpath("data/autres_manip/Manip_souris87/fullLog.txt")
