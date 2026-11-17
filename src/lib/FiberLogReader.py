@@ -73,8 +73,12 @@ class FiberLogReader(object):
         idx = np.searchsorted(self.areas["timestamp"], query, side="left") - 1
         return self.areas["area"][idx]
 
-    def recording_start(self) -> datetime:
+    def recordings_start(self) -> datetime:
         return self.recordings["timestamp"][0]
+
+    def recording_start(self, recording: int) -> datetime:
+        index = np.where(self.recordings["record_number"] == recording)[0][0]
+        return self.recordings["timestamp"][index]
 
 
 def parse_timestamp_from_logline(line: str) -> datetime | None:
