@@ -1,4 +1,5 @@
 import logging
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -10,6 +11,24 @@ from src.lib.processing import delta_f
 RecordingNumber = int
 
 logger = logging.getLogger(__name__)
+
+
+def get_fullname_component_from_fullpath(path: Path, mode: FiberAcquisitionMode) -> str:
+    match mode:
+        case FiberAcquisitionMode.RWD:
+            name = path.parent.parent.name
+            return name
+        case FiberAcquisitionMode.PYPHOTOMETRY:
+            name = path.stem
+            return name
+
+
+def parse_name_number_from_full(fullname: str) -> tuple[str, RecordingNumber] | None:
+    match = re.match(r"(\w+)\s+(\d+)", fullname)
+    if match:
+        name, number = match.groups()
+        return name, int(number)
+    return None
 
 
 def parse_mouse_recording_name(filename: str) -> tuple[int, str]:
