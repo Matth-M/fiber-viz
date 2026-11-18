@@ -31,6 +31,16 @@ def parse_name_number_from_full(fullname: str) -> tuple[str, RecordingNumber] | 
     return None
 
 
+def find_log_from_mouse_folder(mouse_folder: Path):
+    log_match = list(mouse_folder.glob("*.txt"))
+    if len(log_match) > 1:
+        raise ValueError("Too many txt found, expect only 1")
+    if len(log_match) == 0:
+        raise ValueError("No log found")
+
+    return log_match[0]
+
+
 def parse_mouse_recording_name(filename: str) -> tuple[int, str]:
     name, record_number = filename.split(maxsplit=1)
     return (int(record_number), name)
