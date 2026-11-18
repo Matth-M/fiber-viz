@@ -21,6 +21,14 @@ class FiberAcquisitionMode(Enum):
     RWD = "RWD"
 
 
+def parse_recording(filepath: Path, mode: FiberAcquisitionMode) -> pd.DataFrame:
+    match mode:
+        case FiberAcquisitionMode.PYPHOTOMETRY:
+            return parse_pyphotometry_csv(filepath)
+        case FiberAcquisitionMode.RWD:
+            return parse_rwd_csv(filepath)
+
+
 def parse_rwd_csv(filepath: Path) -> pd.DataFrame:
     df = pd.read_csv(
         filepath,
