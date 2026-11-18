@@ -47,4 +47,3 @@ Matthieu Matsima
 
 
 layout = html.Div([layout2, textlayout])
-
