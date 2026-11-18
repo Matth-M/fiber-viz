@@ -7,6 +7,7 @@ import pandas as pd
 from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.FiberLogReader import FiberLogReader
 from src.lib.processing import delta_f
+from src.utils import setup_logging
 
 RecordingNumber = int
 
@@ -114,3 +115,19 @@ def parse_samples_from_recordings(
     actual_timestamps = start + pd.to_timedelta(df["TimeStamp"], unit="ms")
     df["area"] = log_reader.areas_from_timestamps(actual_timestamps)
     return df
+
+
+if __name__ == "__main__":
+    setup_logging(debug=True)
+    pyphotometry_path = Path("data/autres_manip/Manip_souris87/Sh2WT87SS1b 10.csv")
+    rwd_path = Path.cwd().joinpath(
+        "data/autres_manip/Manip_souris83/Sh2Het86SSfiber270426 1/2026_04_27-16_41_10/Fluorescence.csv"
+    )
+    pyphotometry = get_fullname_component_from_fullpath(
+        pyphotometry_path, FiberAcquisitionMode.PYPHOTOMETRY
+    )
+    print(pyphotometry)
+    rwd = get_fullname_component_from_fullpath(rwd_path, FiberAcquisitionMode.RWD)
+    print(rwd)
+
+    print(parse_name_number_from_full(rwd), parse_name_number_from_full(pyphotometry))
