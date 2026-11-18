@@ -43,7 +43,7 @@ def parse_pyphotometry_csv(
     filepath: Path,
     sample_rate=SAMPLE_RATE,
     scale=SCALE_ANALOG_VALUE,
-):
+) -> pd.DataFrame:
     with filepath.open("r") as f:
         raw_content = f.readlines()
         # 1st line is json metadata

@@ -19,7 +19,7 @@ def delta_f(ch410, ch470):
 
 
 def area_under_curve(
-    recording_df: pd.DataFrame,
+    df: pd.DataFrame,
     log_reader: FiberLogReader,
     recording_number: int,
     baseline_delta_ms: int = 1000,
@@ -63,7 +63,7 @@ def area_under_curve(
     ).total_seconds()
     normalized_auc_after = auc_after / after_duration
 
-    return normalized_auc_between, normalized_auc_after
+    return df, normalized_auc_between, normalized_auc_after
 
 
 if __name__ == "__main__":
