@@ -31,5 +31,5 @@ def setup_logging(debug: bool):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
         handlers=[fileLogs, streamLog],
-        format="%(levelname)s:%(filename)s:%(funcName)s:%(lineno)d:%(message)s",
+        format="%(levelname)s:%(asctime)s:%(filename)s:%(funcName)s:%(lineno)d:%(message)s",
     )
