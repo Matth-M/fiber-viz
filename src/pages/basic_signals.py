@@ -54,7 +54,11 @@ layout = html.Div(
     Input("root_folder", "value"),
 )
 def experiment_folders(root_folder):
+    if not root_folder:
+        return []
     root_folder = Path(root_folder)
+    if not root_folder.exists():
+        return []
     # Return all mouse folders in root folder
     return [
         {"label": child.name, "value": str(child.absolute())}
@@ -73,6 +77,8 @@ def experiment_file(folder, mode):
         return []
 
     mouse_folder = Path(folder)
+    if not mouse_folder.exists():
+        return []
 
     files = [
         {
