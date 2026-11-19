@@ -63,6 +63,7 @@ class FiberLogReader(object):
         }
 
         self.events = events
+        self.path = log
 
     def areas_from_timestamps(self, timestamps: pd.Series):
         query = timestamps.astype("datetime64[us]").to_numpy()
