@@ -69,6 +69,11 @@ def parse_name_number_from_full(fullname: str) -> tuple[str, RecordingId] | None
     return None
 
 
+def parse_name_number_from_path(path, mode) -> tuple[str, RecordingId] | None:
+    fullname = get_fullname_component_from_fullpath(path, mode)
+    return parse_name_number_from_full(fullname)
+
+
 def find_log_from_mouse_folder(mouse_folder: Path):
     log_match = list(mouse_folder.glob("*.txt"))
     if len(log_match) > 1:
