@@ -85,14 +85,16 @@ def area_under_curve(
 
 if __name__ == "__main__":
     setup_logging(debug=True)
-    log = Path.cwd().joinpath(
-        "data/autres_manip/Manip_souris83/testLog - 2026-04-27Sh2Het83SSFiber.log.txt"
-    )
-    recording_csv = Path.cwd().joinpath(
-        "./data/autres_manip/Manip_souris83/Sh2Het86SSfiber270426 9/2026_04_27-16_50_59/Fluorescence.csv"
-    )
-    recording = 9
 
-    log_reader = FiberLogReader(log)
-    df = parse_rwd_csv(recording_csv)
-    be, af = area_under_curve(df, log_reader, recording)
+    if False:
+        log = Path.cwd().joinpath(
+            "data/autres_manip/Manip_souris83/testLog - 2026-04-27Sh2Het83SSFiber.log.txt"
+        )
+        recording_csv = Path.cwd().joinpath(
+            "./data/autres_manip/Manip_souris83/Sh2Het86SSfiber270426 9/2026_04_27-16_50_59/Fluorescence.csv"
+        )
+        recording = 9
+
+        log_reader = FiberLogReader(log)
+        df = parse_recording(recording_csv, FiberAcquisitionMode.RWD)
+        be, af = area_under_curve(df, log_reader, recording)
