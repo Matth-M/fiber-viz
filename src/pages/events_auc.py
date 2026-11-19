@@ -5,14 +5,9 @@ import dash
 from dash import Input, Output, callback, dcc, html
 from plotly import graph_objects as go
 
-from src.lib.fiber_data_format import FiberAcquisitionMode, parse_recording
-from src.lib.FiberLogReader import FiberLogReader
-from src.lib.processing import area_under_curve
+from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.recordings import (
-    find_log_from_mouse_folder,
-    get_fullname_component_from_fullpath,
     get_recordings_mouse_folder,
-    parse_name_number_from_full,
 )
 from src.utils import DATA_ROOT
 
@@ -107,29 +102,14 @@ def update_boxplot(recording, mouse_folder, mode):
     if not recording or not mouse_folder:
         return go.Figure()
 
-    # Get log from glob mouse folder
-    mouse_folder = Path(mouse_folder)
-    log = find_log_from_mouse_folder(mouse_folder)
-    log_reader = FiberLogReader(log)
-
-    mode = FiberAcquisitionMode(mode)
-
-    # Get recording as DataFrame
-    recording_path = Path(recording)
-    fullname = get_fullname_component_from_fullpath(recording_path, mode)
-    name_number = parse_name_number_from_full(fullname)
-    if name_number:
-        _, recording_number = name_number
-    else:
-        return go.Figure()
-    recording_path = Path(recording_path)
-    mode = FiberAcquisitionMode(mode)
-    df = parse_recording(recording_path, mode)
-    df, auc_between, auc_after = area_under_curve(df, log_reader, recording_number)
+    from src.lib.plots import auc_plot
 
     # Plot Data
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(y=df["delta_f"]))
+    fig = auc_plot(recording, mouse_folder, mode)
+
+    # TODO: show warning to user
+    if not fig:
+        return go.Figure()
 
     return fig
 
