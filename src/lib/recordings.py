@@ -10,7 +10,6 @@ from src.lib.fiber_data_format import (
     parse_rwd_csv,
 )
 from src.lib.FiberLogReader import FiberLogReader
-from src.lib.processing import delta_f
 from src.utils import setup_logging
 
 RecordingId = int
@@ -150,9 +149,6 @@ def parse_samples_from_recordings(
         dfs.append(record_df)
 
     df = pd.concat(dfs)
-    ch410 = df.iloc[:, 1]
-    ch470 = df.iloc[:, 2]
-    df["delta_f"] = delta_f(ch410, ch470)
     start = log_reader.recordings_start()  # Timestamp of the start of the 1st recording
     actual_timestamps = start + pd.to_timedelta(df["TimeStamp"], unit="ms")
     df["area"] = log_reader.areas_from_timestamps(actual_timestamps)
