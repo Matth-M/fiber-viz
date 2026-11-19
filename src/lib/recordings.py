@@ -13,7 +13,7 @@ from src.lib.FiberLogReader import FiberLogReader
 from src.lib.processing import delta_f
 from src.utils import setup_logging
 
-RecordingNumber = int
+RecordingId = int
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def get_fullname_component_from_fullpath(path: Path, mode: FiberAcquisitionMode)
             return name
 
 
-def parse_name_number_from_full(fullname: str) -> tuple[str, RecordingNumber] | None:
+def parse_name_number_from_full(fullname: str) -> tuple[str, RecordingId] | None:
     match = re.match(r"(\w+)\s+(\d+)", fullname)
     if match:
         name, number = match.groups()
@@ -86,7 +86,7 @@ def parse_mouse_recording_name(filename: str) -> tuple[int, str]:
 
 def get_recordings_mouse_folder(
     mouse_folder: Path, mode: FiberAcquisitionMode
-) -> list[tuple[RecordingNumber, str, Path]]:
+) -> list[tuple[RecordingId, str, Path]]:
     recordings = []
     match mode:
         case FiberAcquisitionMode.PYPHOTOMETRY:
@@ -119,7 +119,7 @@ def get_recordings_mouse_folder(
 
 
 def parse_samples_from_recordings(
-    recordings: list[tuple[RecordingNumber, str, Path]],
+    recordings: list[tuple[RecordingId, str, Path]],
     log_reader: FiberLogReader,
 ) -> pd.DataFrame:
     """
