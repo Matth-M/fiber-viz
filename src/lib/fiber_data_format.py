@@ -4,7 +4,7 @@ import logging
 import re
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
 
 import numpy as np
@@ -19,14 +19,6 @@ SCALE_ANALOG_VALUE = 1 / 100
 class FiberAcquisitionMode(Enum):
     PYPHOTOMETRY = "PYPHOTOMETRY"
     RWD = "RWD"
-
-
-def parse_recording(filepath: Path, mode: FiberAcquisitionMode) -> pd.DataFrame:
-    match mode:
-        case FiberAcquisitionMode.PYPHOTOMETRY:
-            return parse_pyphotometry_csv(filepath)
-        case FiberAcquisitionMode.RWD:
-            return parse_rwd_csv(filepath)
 
 
 def parse_rwd_csv(filepath: Path) -> pd.DataFrame:

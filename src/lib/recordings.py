@@ -4,7 +4,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.lib.fiber_data_format import FiberAcquisitionMode
+from src.lib.fiber_data_format import (
+    FiberAcquisitionMode,
+    parse_pyphotometry_csv,
+    parse_rwd_csv,
+)
 from src.lib.FiberLogReader import FiberLogReader
 from src.lib.processing import delta_f
 from src.utils import setup_logging
@@ -12,6 +16,39 @@ from src.utils import setup_logging
 RecordingNumber = int
 
 logger = logging.getLogger(__name__)
+
+
+def recording_has_events(recording: RecordingId, log_reader: FiberLogReader):
+    """Check if recording number has parsed events."""
+
+    for event in log_reader.events.keys():
+        if recording not in log_reader.events[event]:
+            return False
+    return True
+
+
+def parse_recording(
+    filepath: Path, mode: FiberAcquisitionMode, log_reader: FiberLogReader
+) -> pd.DataFrame:
+    match mode:
+        case FiberAcquisitionMode.PYPHOTOMETRY:
+            df = parse_pyphotometry_csv(filepath)
+        case FiberAcquisitionMode.RWD:
+            df = parse_rwd_csv(filepath)
+
+    # Get date of each sample using recording start date with log
+    name_number_result = parse_name_number_from_path(filepath, mode)
+    if name_number_result:
+        _, recording_number = name_number_result
+    recording_start = log_reader.recording_start(recording_number)
+    df["date"] = pd.to_datetime(
+        df["TimeStamp"],
+        unit="ms",
+        origin=recording_start,
+    )
+    # Convert timestamp to timedelta
+    df["TimeStamp"] = pd.to_timedelta(df["TimeStamp"], unit="ms")
+    return df
 
 
 def get_fullname_component_from_fullpath(path: Path, mode: FiberAcquisitionMode) -> str:
