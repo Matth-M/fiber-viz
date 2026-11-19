@@ -21,11 +21,15 @@ def setup_logging(debug: bool):
     logDir = Path.cwd().joinpath(".logs")
     logDir.mkdir(exist_ok=True)
     logFile = logDir.joinpath(f"{get_time()}.log")
-    symlink = logFile.parent.joinpath("latest.log")
-    if symlink.exists():
-        symlink.unlink()
-    symlink.symlink_to(logFile)
-    fileLogs = logging.FileHandler(symlink)
+
+    # TODO:
+    # Symlink can cause OSError
+    # symlink = logFile.parent.joinpath("latest.log")
+    # if symlink.exists():
+    #     symlink.unlink()
+    # symlink.symlink_to(logFile)
+
+    fileLogs = logging.FileHandler(logFile)
     streamLog = logging.StreamHandler()
 
     logging.basicConfig(
