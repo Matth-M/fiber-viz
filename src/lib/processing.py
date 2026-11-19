@@ -1,12 +1,13 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from src.lib.fiber_data_format import parse_rwd_csv
+from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.FiberLogReader import FiberLogReader
+from src.lib.recordings import RecordingId, parse_recording
 from src.utils import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -47,44 +48,35 @@ def area_under_curve(
     df: pd.DataFrame,
     log_reader: FiberLogReader,
     recording_number: int,
-    baseline_delta_ms: int = 1000,
-    after_out_door_delta_s=25,
-    dx: float = 0.02,  # 1 sample every 0.02 second
+    baseline_delta=timedelta(seconds=1.0),
+    after_out_door_delta=timedelta(seconds=25.0),
+    dx=0.02,  # 1 sample every 0.02 second
 ):
 
-    recording_start = log_reader.recording_start(recording_number)
-    df["TimeStamp"] = pd.to_datetime(
-        df["TimeStamp"],
-        unit="ms",
-        origin=recording_start,
-    )
     df["delta_f"] = delta_f(df["CH1-410"], df["CH1-470"])
 
-    baseline_delta = timedelta(seconds=baseline_delta_ms)
-    door_open_timestamp = log_reader.events["door_open"][recording_number]
-    baseline_timestamp = door_open_timestamp - baseline_delta
-    baseline_value = df[df["TimeStamp"] >= baseline_timestamp].iloc[0]["delta_f"]
-    df["delta_f_baseline"] = (df["delta_f"] - baseline_value).clip(lower=0)
+    # Baseline
+    _, baseline_value = get_baseline(df, log_reader, recording_number, baseline_delta)
+    df["delta_f_baseline"] = df["delta_f"] - baseline_value
+    df["delta_f_baseline_clipped"] = df["delta_f_baseline"].clip(lower=0)
 
-    animal_out_timestamp = log_reader.events["animal_out"][recording_number]
-    df_between_events = df[
-        df["TimeStamp"].between(door_open_timestamp, animal_out_timestamp)
-    ]
+    # AUC between door_open and animal_out events
+    door_open_datetime = log_reader.events["door_open"][recording_number]
+    animal_out_datetime = log_reader.events["animal_out"][recording_number]
+    df_between_events = df[df["date"].between(door_open_datetime, animal_out_datetime)]
     auc_between = np.trapezoid(df_between_events["delta_f_baseline"], dx=dx)
-    between_events_duration = (
-        animal_out_timestamp - door_open_timestamp
-    ).total_seconds()
+    between_events_duration = (animal_out_datetime - door_open_datetime).total_seconds()
     normalized_auc_between = auc_between / between_events_duration
 
-    delta_after = timedelta(seconds=after_out_door_delta_s)
+    # AUC  animal_out after event
     df_after = df[
-        df["TimeStamp"].between(
-            animal_out_timestamp, animal_out_timestamp + delta_after
+        df["date"].between(
+            animal_out_datetime, animal_out_datetime + after_out_door_delta
         )
     ]
     auc_after = np.trapezoid(df_after["delta_f_baseline"], dx=dx)
     after_duration = (
-        animal_out_timestamp - animal_out_timestamp + delta_after
+        animal_out_datetime - animal_out_datetime + after_out_door_delta
     ).total_seconds()
     normalized_auc_after = auc_after / after_duration
 
