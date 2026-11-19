@@ -1,6 +1,7 @@
 import glob
 import os
 from pathlib import Path
+import logging
 
 import dash
 import numpy as np
@@ -15,6 +16,8 @@ from src.utils import DATA_ROOT
 dash.register_page(__name__, path="/photobleaching")
 
 graphs_root_folder = DATA_ROOT.joinpath("linear_regressions_graphs")
+
+logger = logging.getLogger(__name__)
 
 layout = html.Div(
     [
