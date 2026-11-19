@@ -18,6 +18,31 @@ def delta_f(ch410, ch470):
     return ((ch470 - isofit) / isofit) * 100
 
 
+def get_baseline_time(
+    recording_number: RecordingId,
+    log_reader: FiberLogReader,
+    baseline_delta=timedelta(seconds=1.0),
+) -> datetime:
+    door_open_datetime = log_reader.events["door_open"][recording_number]
+    return door_open_datetime - baseline_delta
+
+
+def get_baseline(
+    df: pd.DataFrame,
+    log_reader: FiberLogReader,
+    recording_number: RecordingId,
+    baseline_delta=timedelta(seconds=1.0),
+) -> tuple[datetime, float]:
+    # Baseline
+    baseline_datetime = get_baseline_time(recording_number, log_reader, baseline_delta)
+    if "delta_f" not in df:
+        df["delta_f"] = delta_f(df["CH1-410"], df["CH1-470"])
+
+    baseline_value = df[df["date"] >= baseline_datetime].iloc[0]["delta_f"]
+    return baseline_datetime, baseline_value
+
+
+
 def area_under_curve(
     df: pd.DataFrame,
     log_reader: FiberLogReader,
