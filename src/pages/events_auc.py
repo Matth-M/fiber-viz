@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 from pathlib import Path
 
 import dash
@@ -52,6 +53,9 @@ layout = html.Div(
         html.Div(
             [
                 dcc.Graph(id="graph"),
+                dcc.Slider(0, 5.0, 0.1, value=1.0, id="baseline_slider"),
+                html.Br(),
+                dcc.Slider(0, 50, 1, value=25.0, id="after_duration_slider"),
             ]
         ),
         warning,
@@ -107,15 +111,21 @@ def graph_file(mouse_folder, mode):
     Input("recording_path", "value"),
     Input("mouse_folder", "value"),
     Input("mode_selection", "value"),
+    Input("baseline_slider", "value"),
+    Input("after_duration_slider", "value"),
 )
-def update_boxplot(recording, mouse_folder, mode):
+def update_boxplot(recording, mouse_folder, mode, baseline, after_out_duration):
     if not recording or not mouse_folder:
         return go.Figure(), ""
 
     from src.lib.plots import auc_plot
 
     # Plot Data
-    fig, error_msg = auc_plot(recording, mouse_folder, mode)
+    baseline_delta = timedelta(seconds=float(baseline))
+    after_out_delta = timedelta(seconds=float(after_out_duration))
+    fig, error_msg = auc_plot(
+        recording, mouse_folder, mode, baseline_delta, after_out_delta
+    )
 
     if not fig:
         logger.debug(f"{recording}, {mode}: {error_msg}")
