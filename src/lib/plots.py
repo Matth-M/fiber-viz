@@ -41,13 +41,15 @@ def auc_plot(
     if name_number:
         _, recording_number = name_number
     else:
-        logger.debug(f"Could not parse recording number: {recording_path}")
-        return None
+        error_message = f"Could not parse recording number: {recording_path}"
+        logger.debug(error_message)
+        return None, error_message
 
     valid = recording_has_events(recording_number, log_reader)
     if not valid:
-        logger.debug(f"Recording has no parsed events: {recording_path}")
-        return None
+        error_message = f"Recording has no parsed events: {recording_path}"
+        logger.debug(error_message)
+        return None, error_message
 
     mode = FiberAcquisitionMode(mode)
     df = parse_recording(recording_path, mode, log_reader)
@@ -116,7 +118,7 @@ def auc_plot(
         xaxis_title="Time (s)",
         yaxis_title="Deltaf",
     )
-    return fig
+    return fig, None
 
 
 if __name__ == "__main__":

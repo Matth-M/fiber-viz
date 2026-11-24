@@ -17,6 +17,14 @@ logger = logging.getLogger(__name__)
 
 experiments_root_folder = DATA_ROOT.joinpath("autres_manip")
 
+warning = html.P(
+    id="warning",
+    style={
+        "padding": "2em",
+        "color": "red",
+    },
+)
+
 layout = html.Div(
     [
         html.Div(
@@ -46,6 +54,7 @@ layout = html.Div(
                 dcc.Graph(id="graph"),
             ]
         ),
+        warning,
     ],
     style={"padding": "20px"},
 )
@@ -94,24 +103,25 @@ def graph_file(mouse_folder, mode):
 
 @callback(
     Output("graph", "figure"),
+    Output("warning", "children"),
     Input("recording_path", "value"),
     Input("mouse_folder", "value"),
     Input("mode_selection", "value"),
 )
 def update_boxplot(recording, mouse_folder, mode):
     if not recording or not mouse_folder:
-        return go.Figure()
+        return go.Figure(), ""
 
     from src.lib.plots import auc_plot
 
     # Plot Data
-    fig = auc_plot(recording, mouse_folder, mode)
+    fig, error_msg = auc_plot(recording, mouse_folder, mode)
 
-    # TODO: show warning to user
     if not fig:
-        return go.Figure()
+        logger.debug(f"{recording}, {mode}: {error_msg}")
+        return go.Figure(), f"Error: {error_msg}"
 
-    return fig
+    return fig, ""
 
 
 # @callback(
