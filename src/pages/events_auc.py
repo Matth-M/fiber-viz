@@ -7,6 +7,7 @@ from dash import Input, Output, callback, dcc, html
 from plotly import graph_objects as go
 
 from src.lib.fiber_data_format import FiberAcquisitionMode
+from src.lib.plots import auc_plot
 from src.lib.recordings import (
     get_recordings_mouse_folder,
 )
@@ -118,13 +119,15 @@ def update_boxplot(recording, mouse_folder, mode, baseline, after_out_duration):
     if not recording or not mouse_folder:
         return go.Figure(), ""
 
-    from src.lib.plots import auc_plot
-
     # Plot Data
     baseline_delta = timedelta(seconds=float(baseline))
     after_out_delta = timedelta(seconds=float(after_out_duration))
     fig, error_msg = auc_plot(
-        recording, mouse_folder, mode, baseline_delta, after_out_delta
+        Path(recording),
+        Path(mouse_folder),
+        FiberAcquisitionMode(mode),
+        baseline_delta,
+        after_out_delta,
     )
 
     if not fig:

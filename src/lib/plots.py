@@ -20,22 +20,18 @@ logger = logging.getLogger(__name__)
 
 
 def auc_plot(
-    recording,
-    mouse_folder,
-    mode,
+    recording_path: Path,
+    mouse_folder: Path,
+    mode: FiberAcquisitionMode,
     baseline_delta=timedelta(seconds=1.0),
     after_out_door_delta=timedelta(seconds=25.0),
 ):
 
     # Get log from glob mouse folder
-    mouse_folder = Path(mouse_folder)
     log = find_log_from_mouse_folder(mouse_folder)
     log_reader = FiberLogReader(log)
 
-    mode = FiberAcquisitionMode(mode)
-
     # Get recording as DataFrame
-    recording_path = Path(recording)
     fullname = get_fullname_component_from_fullpath(recording_path, mode)
     name_number = parse_name_number_from_full(fullname)
     if name_number:
@@ -51,7 +47,6 @@ def auc_plot(
         logger.debug(error_message)
         return None, error_message
 
-    mode = FiberAcquisitionMode(mode)
     df = parse_recording(recording_path, mode, log_reader)
     baseline_time, baseline = get_baseline(
         df, log_reader, recording_number, baseline_delta
@@ -150,7 +145,7 @@ if __name__ == "__main__":
 
         mode = FiberAcquisitionMode.RWD
 
-        fig = auc_plot(recording.__str__(), mouse_folder.__str__(), mode.value)
+        fig = auc_plot(recording, mouse_folder, mode)
 
         if args.show:
             if fig:
