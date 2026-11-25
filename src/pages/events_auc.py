@@ -54,9 +54,10 @@ layout = html.Div(
         html.Div(
             [
                 dcc.Graph(id="graph"),
+                html.P(id="auc"),
                 dcc.Slider(0, 5.0, 0.1, value=1.0, id="baseline_slider"),
                 html.Br(),
-                dcc.Slider(0, 50, 1, value=25.0, id="after_duration_slider"),
+                dcc.Slider(0, 60, 1, value=25.0, id="after_duration_slider"),
             ]
         ),
         warning,
@@ -108,6 +109,7 @@ def graph_file(mouse_folder, mode):
 
 @callback(
     Output("graph", "figure"),
+    Output("auc", "children"),
     Output("warning", "children"),
     Input("recording_path", "value"),
     Input("mouse_folder", "value"),
@@ -117,12 +119,12 @@ def graph_file(mouse_folder, mode):
 )
 def update_boxplot(recording, mouse_folder, mode, baseline, after_out_duration):
     if not recording or not mouse_folder:
-        return go.Figure(), ""
+        return go.Figure(), "", ""
 
     # Plot Data
     baseline_delta = timedelta(seconds=float(baseline))
     after_out_delta = timedelta(seconds=float(after_out_duration))
-    fig, error_msg = auc_plot(
+    fig, auc_between, auc_after, error_msg = auc_plot(
         Path(recording),
         Path(mouse_folder),
         FiberAcquisitionMode(mode),
@@ -130,11 +132,15 @@ def update_boxplot(recording, mouse_folder, mode, baseline, after_out_duration):
         after_out_delta,
     )
 
-    if not fig:
+    if error_msg:
         logger.debug(f"{recording}, {mode}: {error_msg}")
-        return go.Figure(), f"Error: {error_msg}"
+        return go.Figure(), "", f"Error: {error_msg}"
 
-    return fig, ""
+    return (
+        fig,
+        f"auc between events: {auc_between}\tauc after door out: {auc_after}",
+        "",
+    )
 
 
 # @callback(
