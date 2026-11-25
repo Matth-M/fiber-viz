@@ -1,9 +1,9 @@
 import logging
-from datetime import timedelta
 from pathlib import Path
 
 from plotly import graph_objects as go
 
+from src.lib.constants import DEFAULT_AFTER_OUT_DELTA, DEFAULT_BASELINE_DELTA
 from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.FiberLogReader import FiberLogReader
 from src.lib.processing import auc_data, get_baseline
@@ -20,8 +20,8 @@ def auc_plot(
     recording_path: Path,
     mouse_folder: Path,
     mode: FiberAcquisitionMode,
-    baseline_delta=timedelta(seconds=1.0),
-    after_out_door_delta=timedelta(seconds=25.0),
+    baseline_delta=DEFAULT_BASELINE_DELTA,
+    after_out_door_delta=DEFAULT_AFTER_OUT_DELTA,
 ):
     # Get log from glob mouse folder
     log = find_log_from_mouse_folder(mouse_folder)

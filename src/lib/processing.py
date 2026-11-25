@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from src.lib.constants import DEFAULT_AFTER_OUT_DELTA, DEFAULT_BASELINE_DELTA
 from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.FiberLogReader import FiberLogReader
 from src.lib.recordings import RecordingId, parse_recording, validate_recording
@@ -17,8 +18,8 @@ def auc_data(
     recording_path: Path,
     mode: FiberAcquisitionMode,
     log_reader: FiberLogReader,
-    baseline_delta=timedelta(seconds=1.0),
-    after_out_door_delta=timedelta(seconds=25.0),
+    baseline_delta=DEFAULT_BASELINE_DELTA,
+    after_out_door_delta=DEFAULT_AFTER_OUT_DELTA,
 ):
     _, recording_number, err_msg = validate_recording(
         recording_path,
@@ -51,7 +52,7 @@ def delta_f(ch410, ch470):
 def get_baseline_time(
     recording_number: RecordingId,
     log_reader: FiberLogReader,
-    baseline_delta=timedelta(seconds=1.0),
+    baseline_delta=DEFAULT_BASELINE_DELTA,
 ) -> datetime:
     door_open_datetime = log_reader.events["door_open"][recording_number]
     return door_open_datetime - baseline_delta
@@ -76,8 +77,8 @@ def area_under_curve(
     df: pd.DataFrame,
     log_reader: FiberLogReader,
     recording_number: int,
-    baseline_delta=timedelta(seconds=1.0),
-    after_out_door_delta=timedelta(seconds=25.0),
+    baseline_delta=DEFAULT_BASELINE_DELTA,
+    after_out_door_delta=DEFAULT_AFTER_OUT_DELTA,
     dx=0.02,  # 1 sample every 0.02 second
 ):
 
