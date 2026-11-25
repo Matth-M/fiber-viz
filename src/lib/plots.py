@@ -10,7 +10,7 @@ from src.lib.processing import area_under_curve, get_baseline
 from src.lib.recordings import (
     find_log_from_mouse_folder,
     get_fullname_component_from_fullpath,
-    parse_name_number_from_full,
+    parse_name_number_from_path,
     parse_recording,
     recording_has_events,
 )
@@ -31,23 +31,23 @@ def auc_plot(
     log = find_log_from_mouse_folder(mouse_folder)
     log_reader = FiberLogReader(log)
 
-    # Get recording as DataFrame
-    fullname = get_fullname_component_from_fullpath(recording_path, mode)
-    name_number = parse_name_number_from_full(fullname)
+    # Validate recording
+    name_number = parse_name_number_from_path(recording_path, mode)
     if name_number:
         _, recording_number = name_number
     else:
         error_message = f"Could not parse recording number: {recording_path}"
         logger.debug(error_message)
         return None, error_message
-
     valid = recording_has_events(recording_number, log_reader)
     if not valid:
         error_message = f"Recording has no parsed events: {recording_path}"
         logger.debug(error_message)
         return None, error_message
 
+    # Get recording as DataFrame
     df = parse_recording(recording_path, mode, log_reader)
+
     baseline_time, baseline = get_baseline(
         df, log_reader, recording_number, baseline_delta
     )
