@@ -6,13 +6,10 @@ from plotly import graph_objects as go
 
 from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.FiberLogReader import FiberLogReader
-from src.lib.processing import area_under_curve, get_baseline
+from src.lib.processing import auc_data, get_baseline
 from src.lib.recordings import (
     find_log_from_mouse_folder,
-    get_fullname_component_from_fullpath,
-    parse_name_number_from_path,
-    parse_recording,
-    recording_has_events,
+    validate_recording,
 )
 from src.utils import setup_logging
 
@@ -26,34 +23,16 @@ def auc_plot(
     baseline_delta=timedelta(seconds=1.0),
     after_out_door_delta=timedelta(seconds=25.0),
 ):
-
     # Get log from glob mouse folder
     log = find_log_from_mouse_folder(mouse_folder)
     log_reader = FiberLogReader(log)
 
-    # Validate recording
-    name_number = parse_name_number_from_path(recording_path, mode)
-    if name_number:
-        _, recording_number = name_number
-    else:
-        error_message = f"Could not parse recording number: {recording_path}"
-        logger.debug(error_message)
-        return None, error_message
-    valid = recording_has_events(recording_number, log_reader)
-    if not valid:
-        error_message = f"Recording has no parsed events: {recording_path}"
-        logger.debug(error_message)
-        return None, error_message
+    _, recording_number, err_msg = validate_recording(recording_path, log_reader, mode)
+    if err_msg:
+        return None, None, None, err_msg
 
-    # Get recording as DataFrame
-    df = parse_recording(recording_path, mode, log_reader)
-
-    baseline_time, baseline = get_baseline(
-        df, log_reader, recording_number, baseline_delta
-    )
-
-    df, auc_between, auc_after = area_under_curve(
-        df, log_reader, recording_number, baseline_delta, after_out_door_delta
+    df, auc_between, auc_after = auc_data(
+        recording_path, mode, log_reader, baseline_delta, after_out_door_delta
     )
 
     fig = go.Figure()
@@ -61,6 +40,9 @@ def auc_plot(
     fig.add_trace(go.Scatter(x=time_series_s, y=df["delta_f"], name="Delta f"))
 
     # Baseline horizontal line
+    baseline_time, baseline = get_baseline(
+        df, log_reader, recording_number, baseline_delta
+    )
     time_baseline_s = df[df["date"] >= baseline_time]["TimeStamp"].dt.total_seconds()
     baseline_y = [baseline] * (len(time_baseline_s))
     fig.add_trace(
@@ -113,7 +95,7 @@ def auc_plot(
         xaxis_title="Time (s)",
         yaxis_title="Deltaf",
     )
-    return fig, None
+    return fig, auc_between, auc_after, None
 
 
 if __name__ == "__main__":

@@ -17,6 +17,25 @@ RecordingId = int
 logger = logging.getLogger(__name__)
 
 
+def validate_recording(
+    recording: Path, log_reader: FiberLogReader, mode: FiberAcquisitionMode
+):
+    # Validate recording
+    name_number = parse_name_number_from_path(recording, mode)
+    if name_number:
+        mouse_name, recording_number = name_number
+    else:
+        error_message = f"Could not parse recording number: {recording}"
+        logger.debug(error_message)
+        return None, None, error_message
+    valid = recording_has_events(recording_number, log_reader)
+    if not valid:
+        error_message = f"Recording has no parsed events: {recording}"
+        logger.debug(error_message)
+        return None, None, error_message
+    return mouse_name, recording_number, None
+
+
 def recording_has_events(recording: RecordingId, log_reader: FiberLogReader):
     """Check if recording number has parsed events."""
 

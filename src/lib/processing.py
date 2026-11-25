@@ -7,10 +7,39 @@ import pandas as pd
 
 from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.FiberLogReader import FiberLogReader
-from src.lib.recordings import RecordingId, parse_recording
+from src.lib.recordings import RecordingId, parse_recording, validate_recording
 from src.utils import setup_logging
 
 logger = logging.getLogger(__name__)
+
+
+def auc_data(
+    recording_path: Path,
+    mode: FiberAcquisitionMode,
+    log_reader: FiberLogReader,
+    baseline_delta=timedelta(seconds=1.0),
+    after_out_door_delta=timedelta(seconds=25.0),
+):
+    _, recording_number, err_msg = validate_recording(
+        recording_path,
+        log_reader,
+        mode,
+    )
+    if err_msg:
+        return None, None, None
+
+    # Get recording as DataFrame
+    df = parse_recording(recording_path, mode, log_reader)
+
+    baseline_time, baseline = get_baseline(
+        df, log_reader, recording_number, baseline_delta
+    )
+
+    df, auc_between, auc_after = area_under_curve(
+        df, log_reader, recording_number, baseline_delta, after_out_door_delta
+    )
+
+    return df, auc_between, auc_after
 
 
 def delta_f(ch410, ch470):
@@ -41,7 +70,6 @@ def get_baseline(
 
     baseline_value = df[df["date"] >= baseline_datetime].iloc[0]["delta_f"]
     return baseline_datetime, baseline_value
-
 
 
 def area_under_curve(
