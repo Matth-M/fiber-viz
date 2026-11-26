@@ -107,7 +107,7 @@ def area_under_curve(
     door_open_datetime = log_reader.events["door_open"][recording_number]
     animal_out_datetime = log_reader.events["animal_out"][recording_number]
     df_between_events = df[df["date"].between(door_open_datetime, animal_out_datetime)]
-    auc_between = np.trapezoid(df_between_events["delta_f_baseline"], dx=dx)
+    auc_between = np.trapezoid(df_between_events["delta_f_baseline_clipped"], dx=dx)
     between_events_duration = (animal_out_datetime - door_open_datetime).total_seconds()
     normalized_auc_between = auc_between / between_events_duration
 
@@ -117,7 +117,7 @@ def area_under_curve(
             animal_out_datetime, animal_out_datetime + after_out_door_delta
         )
     ]
-    auc_after = np.trapezoid(df_after["delta_f_baseline"], dx=dx)
+    auc_after = np.trapezoid(df_after["delta_f_baseline_clipped"], dx=dx)
     after_duration = (
         animal_out_datetime - animal_out_datetime + after_out_door_delta
     ).total_seconds()
