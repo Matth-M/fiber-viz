@@ -12,7 +12,7 @@ def get_time() -> str:
     return datetime_to_str(datetime.now())
 
 
-project_root = Path(__file__).parent.parent
+project_root = Path.cwd()
 DATA_ROOT = project_root.joinpath("data")
 
 
