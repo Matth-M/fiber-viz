@@ -8,10 +8,41 @@ import pandas as pd
 from src.lib.constants import DEFAULT_AFTER_OUT_DELTA, DEFAULT_BASELINE_DELTA
 from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.FiberLogReader import FiberLogReader
-from src.lib.recordings import RecordingId, parse_recording, validate_recording
+from src.lib.recordings import (
+    RecordingId,
+    find_log_from_mouse_folder,
+    get_recordings_mouse_folder,
+    parse_recording,
+    validate_recording,
+)
 from src.utils import setup_logging
 
 logger = logging.getLogger(__name__)
+
+
+def mouse_export_auc_data(
+    mouse_folder: Path,
+    mode: FiberAcquisitionMode,
+    baseline_delta=DEFAULT_BASELINE_DELTA,
+    after_out_door_delta=DEFAULT_AFTER_OUT_DELTA,
+) -> pd.DataFrame:
+    data = {"recording_number": [], "auc_between": [], "auc_after_door_exit": []}
+    log_reader = FiberLogReader(find_log_from_mouse_folder(mouse_folder))
+    for recording_number, _, recording_path in get_recordings_mouse_folder(
+        mouse_folder, mode
+    ):
+        _, auc_between, auc_after, err_msg = auc_data(
+            recording_path, mode, log_reader, baseline_delta, after_out_door_delta
+        )
+        if err_msg:
+            logger.warning(err_msg)
+            continue
+
+        data["recording_number"].append(recording_number)
+        data["auc_between"].append(auc_between)
+        data["auc_after_door_exit"].append(auc_after)
+
+    return pd.DataFrame(data)
 
 
 def auc_data(
@@ -141,3 +172,12 @@ if __name__ == "__main__":
         log_reader = FiberLogReader(log)
         df = parse_recording(recording_csv, FiberAcquisitionMode.RWD)
         be, af = area_under_curve(df, log_reader, recording)
+
+    if True:
+        mouse_folder = Path.cwd().joinpath("./data/autres_manip/Manip_souris83")
+        mouse_folder = Path.cwd().joinpath("./data/autres_manip/Manip_souris87")
+        df = mouse_export_auc_data(
+            mouse_folder,
+            FiberAcquisitionMode.PYPHOTOMETRY,
+        )
+        print(df)

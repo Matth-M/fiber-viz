@@ -8,10 +8,9 @@ from plotly import graph_objects as go
 
 from src.lib.fiber_data_format import FiberAcquisitionMode
 from src.lib.plots import auc_plot
-from src.lib.recordings import (
-    get_recordings_mouse_folder,
-)
-from src.utils import DATA_ROOT
+from src.lib.processing import mouse_export_auc_data
+from src.lib.recordings import get_recordings_mouse_folder
+from src.utils import DATA_ROOT, get_time
 
 dash.register_page(__name__, path="/events_auc")
 
@@ -48,6 +47,10 @@ layout = html.Div(
                     ],
                     placeholder="select an event",
                 ),
+                dcc.Button("Export csv", id="export_btn"),
+                # Used to know if the button was clicked or if it's the other input that trigger the export callback
+                dcc.Store(id="last_export_click", data=0),
+                dcc.Download(id="export_csv"),
             ],
             style={"color": "black"},
         ),
@@ -105,6 +108,63 @@ def graph_file(mouse_folder, mode):
         )
     ]
     return files
+
+
+@callback(
+    Output("export_csv", "data"),
+    Output("last_export_click", "data"),
+    Input("root_folder", "value"),
+    Input("mouse_folder", "value"),
+    Input("mode_selection", "value"),
+    Input("last_export_click", "data"),
+    Input("export_btn", "n_clicks"),
+    Input("baseline_slider", "value"),
+    Input("after_duration_slider", "value"),
+    prevent_initial_callback=True,
+)
+def export_auc_csv(
+    root_folder,
+    mouse_folder,
+    mode,
+    n_clicks_stored,
+    n_clicks,
+    baseline,
+    after_out_duration,
+):
+    # Check that button has been clicked
+    if (
+        not n_clicks
+        or n_clicks <= n_clicks_stored
+        or not root_folder
+        or not mouse_folder
+    ):
+        return dash.no_update, n_clicks_stored
+
+    # Check that mouse folder exists
+    root_folder = Path(root_folder)
+    mouse_folder = Path(mouse_folder)
+    if not root_folder.exists() or not mouse_folder.exists():
+        return dash.no_update, n_clicks_stored
+
+    # Get data from all recordings
+    baseline_delta = timedelta(seconds=float(baseline))
+    after_out_delta = timedelta(seconds=float(after_out_duration))
+    mode = FiberAcquisitionMode(mode)
+    df = mouse_export_auc_data(
+        mouse_folder,
+        mode,
+        baseline_delta,
+        after_out_delta,
+    )
+
+    if df.empty:
+        return dash.no_update, n_clicks_stored
+
+    return dcc.send_data_frame(
+        df.to_csv,
+        f"{mouse_folder.stem}_{get_time()}.csv",
+        index=False,
+    ), n_clicks
 
 
 @callback(
