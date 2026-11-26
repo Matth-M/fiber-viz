@@ -27,20 +27,24 @@ def auc_data(
         mode,
     )
     if err_msg:
-        return None, None, None
+        return None, None, None, err_msg
 
     # Get recording as DataFrame
     df = parse_recording(recording_path, mode, log_reader)
+    if df is None:
+        return None, None, None, err_msg
 
-    baseline_time, baseline = get_baseline(
-        df, log_reader, recording_number, baseline_delta
-    )
+    baseline_opt = get_baseline(df, log_reader, recording_number, baseline_delta)
+    if baseline_opt:
+        baseline_time, baseline = baseline_opt
+    else:
+        return None, None, None, "Could not get baseline"
 
     df, auc_between, auc_after = area_under_curve(
         df, log_reader, recording_number, baseline_delta, after_out_door_delta
     )
 
-    return df, auc_between, auc_after
+    return df, auc_between, auc_after, None
 
 
 def delta_f(ch410, ch470):
@@ -49,7 +53,7 @@ def delta_f(ch410, ch470):
     return ((ch470 - isofit) / isofit) * 100
 
 
-def get_baseline_time(
+def get_baseline_date(
     recording_number: RecordingId,
     log_reader: FiberLogReader,
     baseline_delta=DEFAULT_BASELINE_DELTA,
@@ -63,13 +67,19 @@ def get_baseline(
     log_reader: FiberLogReader,
     recording_number: RecordingId,
     baseline_delta=timedelta(seconds=1.0),
-) -> tuple[datetime, float]:
+) -> tuple[datetime, float] | None:
     # Baseline
-    baseline_datetime = get_baseline_time(recording_number, log_reader, baseline_delta)
+    baseline_datetime = get_baseline_date(recording_number, log_reader, baseline_delta)
     if "delta_f" not in df:
         df["delta_f"] = delta_f(df["CH1-410"], df["CH1-470"])
 
-    baseline_value = df[df["date"] >= baseline_datetime].iloc[0]["delta_f"]
+    after_baseline_time_df = df[df["date"] >= baseline_datetime]
+    if len(after_baseline_time_df) == 0:
+        logger.debug(f"No samples after baseline: {recording_number}")
+        return None
+
+    baseline_value = after_baseline_time_df.iloc[0]["delta_f"]
+
     return baseline_datetime, baseline_value
 
 
@@ -85,7 +95,11 @@ def area_under_curve(
     df["delta_f"] = delta_f(df["CH1-410"], df["CH1-470"])
 
     # Baseline
-    _, baseline_value = get_baseline(df, log_reader, recording_number, baseline_delta)
+    baseline_opt = get_baseline(df, log_reader, recording_number, baseline_delta)
+    if baseline_opt:
+        _, baseline_value = baseline_opt
+    else:
+        return None
     df["delta_f_baseline"] = df["delta_f"] - baseline_value
     df["delta_f_baseline_clipped"] = df["delta_f_baseline"].clip(lower=0)
 
