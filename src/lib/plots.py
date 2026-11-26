@@ -29,11 +29,15 @@ def auc_plot(
 
     _, recording_number, err_msg = validate_recording(recording_path, log_reader, mode)
     if err_msg:
+        logger.debug(err_msg)
         return None, None, None, err_msg
 
-    df, auc_between, auc_after = auc_data(
+    df, auc_between, auc_after, err_msg = auc_data(
         recording_path, mode, log_reader, baseline_delta, after_out_door_delta
     )
+    if err_msg:
+        logger.debug(err_msg)
+        return None, None, None, err_msg
 
     fig = go.Figure()
     time_series_s = df["TimeStamp"].dt.total_seconds()
