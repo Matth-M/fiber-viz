@@ -97,7 +97,6 @@ def experiment_file(folder, mode):
     Input("experiment_file", "value"),
 )
 def display_graph_from_csv(csv):
-    logger.debug(f"csv path: {csv}")
 
     if csv is None:
         return go.Figure()
