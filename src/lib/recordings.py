@@ -47,7 +47,7 @@ def recording_has_events(recording: RecordingId, log_reader: FiberLogReader):
 
 def parse_recording(
     filepath: Path, mode: FiberAcquisitionMode, log_reader: FiberLogReader
-) -> pd.DataFrame:
+) -> pd.DataFrame | None:
     match mode:
         case FiberAcquisitionMode.PYPHOTOMETRY:
             df = parse_pyphotometry_csv(filepath)
@@ -58,6 +58,8 @@ def parse_recording(
     name_number_result = parse_name_number_from_path(filepath, mode)
     if name_number_result:
         _, recording_number = name_number_result
+    else:
+        return None
     recording_start = log_reader.recording_start(recording_number)
     df["date"] = pd.to_datetime(
         df["TimeStamp"],
